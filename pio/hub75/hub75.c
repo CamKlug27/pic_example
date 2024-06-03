@@ -336,7 +336,8 @@ int main() {
                 pio->fdebug  = 1 << sm_data_msk;
 
                 // wait for DMA completed tranfer
-                if(dma_channel_is_busy(dma_chan[0]) || (((pio->fdebug >> sm_data_msk) & (0x01)) == 0))
+                // if(dma_channel_is_busy(dma_chan[0]) || (((pio->fdebug >> sm_data_msk) & (0x01)) == 0))
+                if(((pio->fdebug >> sm_data_msk) & (0x01)) == 0)
                 {
                     computeNextData();
                 }
@@ -366,7 +367,7 @@ int main() {
                 // check if SM row is stalled
                 if (((pio->fdebug >> sm_row_msk) & (0x01)) == 0)
                 {
-                    if (u8Bit > 4)
+                    if (u8Bit >= 5)
                     {
                         computeNextData();
                     }
