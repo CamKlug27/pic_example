@@ -18,7 +18,7 @@
 
 
 
-#define F_CPU            300000000
+#define F_CPU            250000000
 #define DATA_BASE_PIN    0
 #define DATA_N_PINS      6
 #define ROWSEL_BASE_PIN  6
