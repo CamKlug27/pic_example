@@ -11,24 +11,26 @@
 #include "hardware/gpio.h"
 #include "hardware/pio.h"
 #include "hardware/dma.h"
+#include "hardware/pll.h"
 #include "hub75.pio.h"
 
 #include "mountains_128x64_rgb565.h"
 
 
 
-#define F_CPU         270000000
-#define DATA_BASE_PIN 0
-#define DATA_N_PINS 6
-#define ROWSEL_BASE_PIN 6
-#define ROWSEL_N_PINS 5
-#define CLK_PIN 11
-#define STROBE_PIN 14
-#define OEN_PIN 15
+#define F_CPU            300000000
+#define DATA_BASE_PIN    0
+#define DATA_N_PINS      6
+#define ROWSEL_BASE_PIN  6
+#define ROWSEL_N_PINS    5
+#define CLK_PIN          11
+#define STROBE_PIN       14
+#define OEN_PIN          15
 
-#define ROW_NUMBER        5
-#define PANNEL_BY_ROW     3
-#define WIDTH (128*PANNEL_BY_ROW*ROW_NUMBER)
+#define ROW_NUMBER        1
+#define PANNEL_BY_ROW     1
+#define PIXEL_BY_PANNEL   128
+#define WIDTH (PIXEL_BY_PANNEL*PANNEL_BY_ROW*ROW_NUMBER)
 #define HEIGHT 64
 
 #define PANNEL_WIDTH (WIDTH*2) 
@@ -36,9 +38,14 @@
 
 #if (ROWSEL_N_PINS == 5)
 #define ADDR_MSK            0xFFFF383F
+#elif (ROWSEL_N_PINS == 4)
+#define ADDR_MSK            0xFFFF3C3F
 #elif (ROWSEL_N_PINS == 3)
 #define ADDR_MSK            0xFFFF3E3F
+#elif (ROWSEL_N_PINS == 2)
+#define ADDR_MSK            0xFFFF3F3F
 #endif
+
 #define WRITE_ADDR(VALUE)                             (sio_hw->gpio_out = ((sio_hw->gpio_out & (0x1FFE3F)) | ((uint32_t)(VALUE) << 6)))
 #define WRITE_ROW(ADDR_VALUE, OE_VALUE, LAT_VALUE)    (sio_hw->gpio_out = ((sio_hw->gpio_out & (ADDR_MSK)) | (((uint32_t)(ADDR_VALUE) << 6) | ((uint32_t)((LAT_VALUE) | ((OE_VALUE) << 1)) << 14))))
 #define WRITE_RGB(VALUE)                              (sio_hw->gpio_out = ((sio_hw->gpio_out & (0x1FFFC0)) | ((uint32_t)(VALUE))))
@@ -47,14 +54,7 @@
 #define LAT_DISABLE                                   0
 #define OE_ENABLE                                     0
 #define OE_DISABLE                                    1
-#define wait()                                        do{                               \
-                                                            for (int i=0 ; i < 90; i++) \
-                                                               __NOP();                 \
-                                                         } while (0)
-#define wait14()                                        do{                               \
-                                                               __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); \
-                                                               __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); \
-                                                         } while (0)
+
  
 #define OFFSET                                          0
 #define PIO_DEF                                         1
@@ -179,8 +179,9 @@ static void computeNextData(void)
 }
 
 int main() {
-    stdio_init_all();
     set_sys_clock_khz(F_CPU / 1000, true);
+    stdio_init_all();
+
 
     #if PIO_DEF == 1
     uint data_prog_offs = pio_add_program(pio, &hub75_data_rgb888_program);
